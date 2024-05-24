@@ -13,6 +13,9 @@
       "path": "CallerModuleInfo_Lib"
     },
     {
+      "path": "CallerModuleInfo_Caller"
+    },
+    {
       "path": ".AL-Go"
     }
   ],
