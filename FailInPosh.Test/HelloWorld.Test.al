@@ -1,26 +1,33 @@
 codeunit 50121 "HelloWorld Test"
 {
     Subtype = Test;
+    SingleInstance = true;
+    EventSubscriberInstance = Manual;
 
+    [HandlerFunctions('SalesShipmentRequestPageHandler')]
     [Test]
-    [HandlerFunctions('HelloWorldMessageHandler')]
-    procedure TestHelloWorldMessage()
+    procedure FunctionNameTest()
     var
-        CustList: TestPage "Customer List";
+        SalesShipmentHeader: Record "Sales Shipment Header";
+        ThisCodeunit: Codeunit "HelloWorld Test";
     begin
-        CustList.OpenView();
-        CustList.Close();
-        if (not MessageDisplayed) then
-            ERROR('Message was not displayed!');
+        if UnbindSubscription(ThisCodeunit) then; //Avoid error if subscription is not bound
+        BindSubscription(ThisCodeunit);
+        SalesShipmentHeader.FindFirst();
+        SalesShipmentHeader.SetRecFilter();
+        Report.Run(Report::"Sales - Shipment", true, false, SalesShipmentHeader);
     end;
 
-    [MessageHandler]
-    procedure HelloWorldMessageHandler(Message: Text[1024])
+    [RequestPageHandler]
+    procedure SalesShipmentRequestPageHandler(var RequestPage: TestRequestPage "Sales - Shipment")
     begin
-        MessageDisplayed := MessageDisplayed or (Message = 'App published: Hello world');
+        RequestPage.Print().Invoke();
     end;
 
-    var
-        MessageDisplayed: Boolean;
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Reporting Triggers", 'OnDocumentPrintReady', '', true, true)]
+    local procedure OnDocumentPrintReady(ObjectType: Option "Report","Page"; ObjectId: Integer; ObjectPayload: JsonObject; DocumentStream: InStream; var Success: Boolean);
+    begin
+        // This code is not expected to be executed
+        Error('OnDocumentPrintReady should not be called');
+    end;
 }
-
